@@ -1,5 +1,5 @@
-import type { Props, Key, Ref } from "shared/ReactTypes";
-import type { WorkTag } from "./workTags";
+import type { Props, Key, Ref, ReactElementType } from "shared/ReactTypes";
+import { FunctionComponent, HostComponent, type WorkTag } from "./workTags";
 import type { Flags } from "./fiberFlags";
 import type { Container } from "hostConfig"; // 要考虑多环境下的Container，native、dom等
 import { NoFlags } from "./fiberFlags";
@@ -22,6 +22,7 @@ export class FiberNode {
 
   alternate: FiberNode | null;
   flags: Flags;
+  subtreeFlags: Flags;
   updateQueue: unknown;
 
   constructor(tag: WorkTag, pendingProps: Props, key: Key) {
@@ -50,6 +51,7 @@ export class FiberNode {
     this.alternate = null;
     // 副作用
     this.flags = NoFlags;
+    this.subtreeFlags = NoFlags;
   }
 }
 
@@ -89,3 +91,19 @@ export const createWorkInProgress = (
 
   return wip;
 };
+
+export function createFiberFromElement(element: ReactElementType): FiberNode {
+  const { type, key, props } = element;
+  let fiberTag: WorkTag = FunctionComponent;
+
+  if (typeof type === "string") {
+    // <div /> div
+    fiberTag = HostComponent;
+    // @ts-ignore
+  } else if (typeof type !== "function" && __Dev__) {
+    console.warn("未定义type类型", type);
+  }
+  const fiber = new FiberNode(fiberTag, props, key);
+  fiber.type = type;
+  return fiber;
+}
