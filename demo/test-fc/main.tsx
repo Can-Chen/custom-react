@@ -1,15 +1,22 @@
-import React from 'react';
+import { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 function App() {
+	const [app, setApp] = useState('app')
+	// @ts-ignore
+	window['setApp'] = setApp
 	return (
+		// @ts-ignore
 		<div>
-			<Child />
+			{/* @ts-ignore */}
+			{app}
 		</div>
 	);
 }
 
 function Child() {
+	const [child, setChild] = useState('child')
+	// @ts-ignore
 	return <span>custom-react</span>;
 }
 
