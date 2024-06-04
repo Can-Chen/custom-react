@@ -3,8 +3,14 @@
 import { ReactElementType } from "shared/ReactTypes";
 import { FiberNode } from "./fiber";
 import { UpdateQueue, processUpdateQueue } from "./updateQueue";
-import { HostComponent, HostRoot, HostText } from "./workTags";
+import {
+  FunctionComponent,
+  HostComponent,
+  HostRoot,
+  HostText,
+} from "./workTags";
 import { mountChildFibers, reconcilerChildFibers } from "./childFibers";
+import { renderWithHooks } from "./fiberHooks";
 
 export const beginWork = (wip: FiberNode) => {
   //比较 返回子fiberNode
@@ -15,6 +21,8 @@ export const beginWork = (wip: FiberNode) => {
       return updateHostcomponent(wip);
     case HostText:
       return null;
+    case FunctionComponent:
+      return updateFunctionComponent(wip);
     default:
       // @ts-ignore
       if (__DEV__) {
@@ -34,6 +42,12 @@ function updateHostRoot(wip: FiberNode) {
   wip.memoizedState = memoizedState;
 
   const nextChildren = wip.memoizedState;
+  reconcilerChildren(wip, nextChildren);
+  return wip.child;
+}
+
+function updateFunctionComponent(wip: FiberNode) {
+  const nextChildren = renderWithHooks(wip);
   reconcilerChildren(wip, nextChildren);
   return wip.child;
 }

@@ -15,7 +15,5 @@ function Child() {
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 	// @ts-ignore
-	<div>
-		<span>custom-react</span>
-	</div>
+	<App name='app' />
 );
