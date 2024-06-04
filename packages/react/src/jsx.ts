@@ -21,6 +21,14 @@ const ReactElement = function (type: Type, key: Key, ref: Ref, props: Props) {
   return element;
 };
 
+export function isValidElement(object: any) {
+  return (
+    typeof object === "object" &&
+    object !== null &&
+    object.$$typeof === REACT_ELEMENT_TYPE
+  );
+}
+
 export const createElemet = (
   type: ElementType,
   config: any,
