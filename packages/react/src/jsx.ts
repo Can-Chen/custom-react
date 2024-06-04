@@ -93,4 +93,4 @@ export const jsx = (type: ElementType, config: any, maybeKey: any) => {
 };
 
 // react源码中有不一样的处理 dev有一些额外的检查和warning打印
-export const jsxDev = jsx;
+export const jsxDEV = jsx;

@@ -34,7 +34,7 @@ export const commitMutationEffects = (finishedWork: FiberNode) => {
 
 const commitMutationEffectsOnFiber = (finishedWork: FiberNode) => {
   const flags = finishedWork.flags;
-  if ((flags & Placement) !== Placement) {
+  if ((flags & Placement) !== NoFlags) {
     commitPlacement(finishedWork);
     finishedWork.flags &= ~Placement;
   }
@@ -58,10 +58,9 @@ const commitPlacement = (finishedWork: FiberNode) => {
 
 const getHostParent = (fiber: FiberNode): Container | null => {
   let parent = fiber.return;
-
+  console.log(fiber, parent)
   while (parent) {
     const parentTag = parent.tag;
-
     if (parentTag === HostComponent) {
       return parent.stateNode as Container;
     }

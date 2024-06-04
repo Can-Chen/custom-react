@@ -10,20 +10,23 @@ export default [
   {
     input: `${pkgPath}/${module}`,
     output: {
-      file: `${pkgDistPath}/react.js`,
-      name: 'index.js',
+      file: `${pkgDistPath}/index.js`,
+      name: 'React',
       format: 'umd'
     },
-    plugins: [...getBaseRollupPlugins(), RollupPkgJson({
-      inputFolder: pkgPath,
-      outputFolder: pkgDistPath,
-      baseContents: ({ name, description, version }) => ({
-        name,
-        description,
-        version,
-        main: 'index.js'
+    plugins: [
+      ...getBaseRollupPlugins(),
+      RollupPkgJson({
+        inputFolder: pkgPath,
+        outputFolder: pkgDistPath,
+        baseContents: ({ name, description, version }) => ({
+          name,
+          description,
+          version,
+          main: 'index.js'
+        })
       })
-    })]
+    ]
   },
   {
     input: `${pkgPath}/src/jsx.ts`,
