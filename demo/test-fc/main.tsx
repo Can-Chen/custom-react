@@ -9,7 +9,7 @@ function App() {
 		// @ts-ignore
 		<div>
 			{/* @ts-ignore */}
-			{app}
+			{app === 'cc' ? <Child /> : app}
 		</div>
 	);
 }
