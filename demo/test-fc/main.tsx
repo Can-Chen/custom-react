@@ -2,12 +2,11 @@ import { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 function App() {
-	const [app, setApp] = useState('app')
+	const [app, setApp] = useState(1)
 	// @ts-ignore
-	window['setApp'] = setApp
 	return (
 		// @ts-ignore
-		<div>
+		<div onClick={() => setApp(app + 1)}>
 			{/* @ts-ignore */}
 			{app === 'cc' ? <Child /> : app}
 		</div>
