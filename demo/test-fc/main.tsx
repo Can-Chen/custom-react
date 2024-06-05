@@ -17,7 +17,7 @@ function App() {
 		// 	{app === 'cc' ? <Child /> : app}
 		// </div>
 
-		<ul onClickCapture={() => setApp(num + 1)}>{arr}</ul>
+		<ul onClickCapture={() => setApp(num + 1)}><>{arr}</></ul>
 	);
 }
 

@@ -1,4 +1,4 @@
-import { REACT_ELEMENT_TYPE } from "shared/ReactSymbols";
+import { REACT_ELEMENT_TYPE, REACT_FARGMENT_TYPE } from "shared/ReactSymbols";
 import type {
   Type,
   Key,
@@ -102,3 +102,5 @@ export const jsx = (type: ElementType, config: any, maybeKey: any) => {
 
 // react源码中有不一样的处理 dev有一些额外的检查和warning打印
 export const jsxDEV = jsx;
+
+export const Fragment = REACT_FARGMENT_TYPE
