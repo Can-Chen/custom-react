@@ -1,8 +1,11 @@
 import { Dispatch } from "react/src/currentDispatcher";
 import type { Action } from "shared/ReactTypes";
+import { Lane } from "./fiberLine";
 
 export interface Update<State> {
   action: Action<State>;
+  lane: Lane;
+  next: Update<any> | null;
 }
 
 export interface UpdateQueue<State> {
@@ -13,9 +16,14 @@ export interface UpdateQueue<State> {
 }
 
 // setState支持传数据或函数
-export const createUpdate = <State>(action: Action<State>): Update<State> => {
+export const createUpdate = <State>(
+  action: Action<State>,
+  lane: Lane
+): Update<State> => {
   return {
     action,
+    lane,
+    next: null,
   };
 };
 
@@ -32,12 +40,20 @@ export const enqueueUpdate = <State>(
   updateQueue: UpdateQueue<State>,
   update: Update<State>
 ) => {
+  const pending = updateQueue.shared.pending;
+  if (pending === null) {
+    update.next = update;
+  } else {
+    update.next = pending.next;
+    pending.next = update;
+  }
   updateQueue.shared.pending = update;
 };
 
 export const processUpdateQueue = <State>(
   baseState: State,
-  pendingUpdate: Update<State> | null
+  pendingUpdate: Update<State> | null,
+  renderLane: Lane
 ): {
   memoizedState: State;
 } => {
@@ -45,14 +61,29 @@ export const processUpdateQueue = <State>(
     memoizedState: baseState,
   };
   if (pendingUpdate !== null) {
-    const action = pendingUpdate.action;
-    if (action instanceof Function) {
-      // baseState 1 update (x) => 4x -> memoizedState 4
-      result.memoizedState = action(baseState);
-    } else {
-      // baseState 1 update 2 -> memoizedState 2
-      result.memoizedState = action;
-    }
+    const first = pendingUpdate.next;
+    let pending = pendingUpdate.next as Update<any>;
+    do {
+      const updateLane = pending.lane;
+      if (updateLane === renderLane) {
+        const action = pending.action;
+        if (action instanceof Function) {
+          // baseState 1 update (x) => 4x -> memoizedState 4
+          baseState = action(baseState);
+        } else {
+          // baseState 1 update 2 -> memoizedState 2
+          baseState = action;
+        }
+      } else {
+        // @ts-ignore
+        if (__DEV__) {
+          console.error("不应该进入updateLane !== renderLane逻辑");
+        }
+      }
+      pending = pending.next as Update<any>;
+    } while (pending !== first);
   }
+
+  result.memoizedState = baseState;
   return result;
 };

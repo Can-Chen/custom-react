@@ -8,6 +8,7 @@ import {
 import type { Flags } from "./fiberFlags";
 import type { Container } from "hostConfig"; // 要考虑多环境下的Container，native、dom等
 import { NoFlags } from "./fiberFlags";
+import { Lane, Lanes, NoLane, NoLanes } from "./fiberLine";
 
 export class FiberNode {
   type: any;
@@ -66,11 +67,15 @@ export class FiberRootNode {
   container: Container;
   current: FiberNode;
   finishedWork: FiberNode | null;
+  pendingLanes: Lanes;
+  finishedLane: Lane;
   constructor(container: Container, hostRootFiber: FiberNode) {
     this.container = container;
     this.current = hostRootFiber;
     hostRootFiber.stateNode = this;
     this.finishedWork = null;
+    this.pendingLanes = NoLanes;
+    this.finishedLane = NoLane;
   }
 }
 
