@@ -7,7 +7,7 @@ import {
 } from "./fiber";
 import { Fragment, HostText } from "./workTags";
 import { ChildDeletion, Placement } from "./fiberFlags";
-import { REACT_ELEMENT_TYPE, REACT_FARGMENT_TYPE } from "shared/ReactSymbols";
+import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from "shared/ReactSymbols";
 
 type ExistingChildren = Map<string | number, FiberNode>;
 
@@ -50,7 +50,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
         if (element.$$typeof === REACT_ELEMENT_TYPE) {
           if (currentFiber.type === element.type) {
             let props = element.props;
-            if (element.type === REACT_FARGMENT_TYPE) {
+            if (element.type === REACT_FRAGMENT_TYPE) {
               props = element.props.children;
             }
             // type 相同
@@ -73,7 +73,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
       }
     }
     let fiber;
-    if (element.type === REACT_FARGMENT_TYPE) {
+    if (element.type === REACT_FRAGMENT_TYPE) {
       fiber = createFiberFromFragment(element.props.children, key);
     } else {
       fiber = createFiberFromElement(element);
@@ -198,7 +198,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
     if (typeof element === "object" && element !== null) {
       switch (element.$$typeof) {
         case REACT_ELEMENT_TYPE:
-          if (element.type === REACT_FARGMENT_TYPE) {
+          if (element.type === REACT_FRAGMENT_TYPE) {
             return updateFragment(
               returnFiber,
               before,
@@ -242,7 +242,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
     const isUnKeyedTopLevelFragment =
       typeof newChild === "object" &&
       newChild !== null &&
-      newChild.type === REACT_FARGMENT_TYPE &&
+      newChild.type === REACT_FRAGMENT_TYPE &&
       newChild.key === null;
     if (isUnKeyedTopLevelFragment) {
       newChild = newChild.props.children;

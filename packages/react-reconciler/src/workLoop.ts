@@ -29,7 +29,7 @@ import { HookHasEffect, Passive } from "./hookEffectTags";
 
 let workInProgress: FiberNode | null = null;
 let wipRootRenderLane: Lane = NoLane;
-let rootDoesHasPassiveEffects: Boolean = false;
+let rootDoesHasPassiveEffects: boolean = false;
 
 function prepareFreshStack(root: FiberRootNode, lane: Lane) {
   workInProgress = createWorkInProgress(root.current, {});
