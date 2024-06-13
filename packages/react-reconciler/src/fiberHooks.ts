@@ -11,6 +11,8 @@ import {
 import { Action } from "shared/ReactTypes";
 import { scheduleUpdateOnFiber } from "./workLoop";
 import { Lane, NoLane, requestUpdateLane } from "./fiberLine";
+import { Flags, PassiveEffect } from "./fiberFlags";
+import { HookHasEffect, Passive } from "./hookEffectTags";
 
 const { currentDispatcher } = internals;
 
@@ -20,24 +22,33 @@ interface Hook {
   next: Hook | null;
 }
 
+type EffectCallback = () => void;
+type EffectDeps = any[] | null;
+
+export interface Effect {
+  tag: Flags;
+  create: EffectCallback | void;
+  destroy: EffectCallback | void;
+  deps: EffectDeps;
+  next: Effect | null;
+}
+
+export interface FCUpdateQueue<State> extends UpdateQueue<State> {
+  lastEffect: Effect | null;
+}
+
 let currentlyRenderingFiber: FiberNode | null = null;
 let workInProgressHook: Hook | null = null;
 let currentHook: Hook | null = null;
 let renderLane: Lane = NoLane;
-
-const HooksDispatcherOnMount: Dispatcher = {
-  useState: mountState,
-};
-
-const HooksDispatcherOnUpdate: Dispatcher = {
-  useState: updateState,
-};
 
 export function renderWithHooks(wip: FiberNode, lane: Lane) {
   // 赋值操作
   currentlyRenderingFiber = wip;
   // 重置
   wip.memoizedState = null;
+  // 重置effect链表
+  wip.updateQueue = null;
   renderLane = lane;
 
   const current = wip.alternate;
@@ -59,6 +70,106 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
   currentHook = null;
   renderLane = NoLane;
   return children;
+}
+
+const HooksDispatcherOnMount: Dispatcher = {
+  useState: mountState,
+  useEffect: mountEffect,
+};
+
+const HooksDispatcherOnUpdate: Dispatcher = {
+  useState: updateState,
+  useEffect: updateEffect,
+};
+
+function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+  const hook = mountWorkInProgressHook();
+  const nextDeps = deps === undefined ? null : deps;
+  (currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
+
+  hook.memoizedState = pushEffect(
+    Passive | HookHasEffect,
+    create,
+    undefined,
+    nextDeps
+  );
+}
+
+function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+  const hook = updateWorkInProgressHook();
+  const nextDeps = deps === undefined ? null : deps;
+  let destroy: EffectCallback | void;
+
+  if (currentHook !== null) {
+    const prevEffect = currentHook.memoizedState as Effect;
+    destroy = prevEffect.destroy;
+    if (nextDeps !== null) {
+      const prevDeps = prevEffect.deps;
+      if (areHookInputEqual(nextDeps, prevDeps)) {
+        hook.memoizedState = pushEffect(Passive, create, destroy, nextDeps);
+        return;
+      }
+    }
+    (currentlyRenderingFiber as FiberNode).flags |= PassiveEffect;
+    hook.memoizedState = pushEffect(
+      Passive | HookHasEffect,
+      create,
+      destroy,
+      nextDeps
+    );
+  }
+}
+
+function areHookInputEqual(nextDeps: EffectDeps, prevDeps: EffectDeps) {
+  if (prevDeps === null || nextDeps === null) {
+    return false;
+  }
+  for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+    if (Object.is(prevDeps[i], nextDeps[i])) continue;
+    return false;
+  }
+  return true;
+}
+
+function pushEffect(
+  hookFlags: Flags,
+  create: EffectCallback | void,
+  destroy: EffectCallback | void,
+  deps: EffectDeps
+): Effect {
+  const effect: Effect = {
+    tag: hookFlags,
+    create,
+    destroy,
+    deps,
+    next: null,
+  };
+  const fiber = currentlyRenderingFiber as FiberNode;
+  const updateQueue = fiber.updateQueue as FCUpdateQueue<any>;
+  if (updateQueue === null) {
+    const updateQueue = createFCUpdateQueue();
+    fiber.updateQueue = updateQueue;
+    effect.next = effect;
+    updateQueue.lastEffect = effect;
+  } else {
+    const lastEffect = updateQueue.lastEffect;
+    if (lastEffect === null) {
+      effect.next = effect;
+      updateQueue.lastEffect = effect;
+    } else {
+      const firstEffect = lastEffect.next;
+      lastEffect.next = effect;
+      effect.next = firstEffect;
+      updateQueue.lastEffect = effect;
+    }
+  }
+  return effect;
+}
+
+function createFCUpdateQueue<State>() {
+  const updateQueue = createUpdateQueue<State>() as FCUpdateQueue<State>;
+  updateQueue.lastEffect = null;
+  return updateQueue;
 }
 
 function updateState<State>(): [State, Dispatch<State>] {

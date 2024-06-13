@@ -9,6 +9,11 @@ export const useState: Dispatcher["useState"] = (initialState) => {
   return dispatcher.useState(initialState);
 };
 
+export const useEffect: Dispatcher["useEffect"] = (callback, deps) => {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useEffect(callback, deps);
+};
+
 export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   currentDispatcher,
 };
