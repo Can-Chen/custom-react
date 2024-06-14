@@ -8,8 +8,9 @@ import {
 import type { Flags } from "./fiberFlags";
 import type { Container } from "hostConfig"; // 要考虑多环境下的Container，native、dom等
 import { NoFlags } from "./fiberFlags";
-import { Lane, Lanes, NoLane, NoLanes } from "./fiberLine";
+import { Lane, Lanes, NoLane, NoLanes } from "./fiberLanes";
 import { Effect } from "./fiberHooks";
+import { CallbackNode } from "scheduler";
 
 export class FiberNode {
   type: any;
@@ -76,6 +77,8 @@ export class FiberRootNode {
   pendingLanes: Lanes;
   finishedLane: Lane;
   pendingPassiveEffects: PendingPassiveEffects;
+  callbackNode: CallbackNode | null;
+  callbackPriority: Lane;
   constructor(container: Container, hostRootFiber: FiberNode) {
     this.container = container;
     this.current = hostRootFiber;
@@ -87,6 +90,8 @@ export class FiberRootNode {
       unmount: [],
       update: [],
     };
+    this.callbackNode = null;
+    this.callbackPriority = NoLane;
   }
 }
 

@@ -12,7 +12,7 @@ import {
 } from "./workTags";
 import { mountChildFibers, reconcilerChildFibers } from "./childFibers";
 import { renderWithHooks } from "./fiberHooks";
-import { Lane } from "./fiberLine";
+import { Lane } from "./fiberLanes";
 
 export const beginWork = (wip: FiberNode, renderLane: Lane) => {
   //比较 返回子fiberNode

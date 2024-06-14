@@ -2,6 +2,7 @@ import internals from "shared/internals";
 import { FiberNode } from "./fiber";
 import { Dispatch, Dispatcher } from "react/src/currentDispatcher";
 import {
+  Update,
   UpdateQueue,
   createUpdate,
   createUpdateQueue,
@@ -10,7 +11,7 @@ import {
 } from "./updateQueue";
 import { Action } from "shared/ReactTypes";
 import { scheduleUpdateOnFiber } from "./workLoop";
-import { Lane, NoLane, requestUpdateLane } from "./fiberLine";
+import { Lane, NoLane, requestUpdateLane } from "./fiberLanes";
 import { Flags, PassiveEffect } from "./fiberFlags";
 import { HookHasEffect, Passive } from "./hookEffectTags";
 
@@ -20,6 +21,8 @@ interface Hook {
   memoizedState: any;
   updateQueue: unknown;
   next: Hook | null;
+  baseState: any;
+  baseQueue: Update<any> | null;
 }
 
 type EffectCallback = () => void;
@@ -176,15 +179,32 @@ function updateState<State>(): [State, Dispatch<State>] {
   const hook = updateWorkInProgressHook();
 
   const queue = hook.updateQueue as UpdateQueue<State>;
+  const baseState = hook.baseState;
   const pending = queue.shared.pending;
+  const current = currentHook as Hook;
+  let baseQueue = current.baseQueue;
 
   if (pending !== null) {
-    const { memoizedState } = processUpdateQueue(
-      hook.memoizedState,
-      pending,
-      renderLane
-    );
-    hook.memoizedState = memoizedState;
+    if (baseQueue !== null) {
+      const baseFirst = baseQueue.next;
+      const pendingFirst = pending.next;
+      baseQueue.next = pendingFirst;
+      pending.next = baseFirst;
+    }
+    baseQueue = pending;
+    current.baseQueue = pending;
+    queue.shared.pending = null;
+
+    if (baseQueue !== null) {
+      const {
+        memoizedState,
+        baseQueue: newBaseQueue,
+        baseState: newBaseState,
+      } = processUpdateQueue(baseState, baseQueue, renderLane);
+      hook.memoizedState = memoizedState;
+      hook.baseQueue = newBaseQueue;
+      hook.baseState = newBaseState;
+    }
   }
   return [hook.memoizedState, queue.dispatch as Dispatch<State>];
 }
@@ -227,6 +247,8 @@ function mountWorkInProgressHook(): Hook {
     memoizedState: null,
     updateQueue: null,
     next: null,
+    baseQueue: null,
+    baseState: null,
   };
 
   if (workInProgressHook === null) {
@@ -273,6 +295,8 @@ function updateWorkInProgressHook(): Hook {
     memoizedState: currentHook.memoizedState,
     updateQueue: currentHook.updateQueue,
     next: null,
+    baseQueue: currentHook.baseQueue,
+    baseState: currentHook.baseState,
   };
   if (workInProgressHook === null) {
     // mount时 第一个hook

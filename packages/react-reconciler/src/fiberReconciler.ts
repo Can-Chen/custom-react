@@ -9,7 +9,7 @@ import {
 } from "./updateQueue";
 import { scheduleUpdateOnFiber } from "./workLoop";
 import { HostRoot } from "./workTags";
-import { requestUpdateLane } from "./fiberLine";
+import { requestUpdateLane } from "./fiberLanes";
 
 export function createContainer(container: Container) {
   const hostRootFiber = new FiberNode(HostRoot, {}, null);
