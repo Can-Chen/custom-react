@@ -14,7 +14,7 @@ import {
 /**
  * 测试btn
  */
-import './style.css';
+import "./style.css";
 const button = document.querySelector("button");
 const root = document.querySelector("#root");
 
@@ -31,10 +31,14 @@ const root = document.querySelector("#root");
     ][priority];
     btn.style.display = "block";
     btn.onclick = () => {
-      workList.unshift({
-        count: 100,
-        priority: priority as Priority,
-      });
+      workList.unshift(
+        // 任务进度
+        // 要保证任务类型是可中断并恢复的
+        {
+          count: 100,
+          priority: priority as Priority,
+        }
+      );
       schedule();
     };
   }
@@ -58,6 +62,7 @@ let curCallback: CallbackNode | null = null;
 
 function schedule() {
   const cbNode = getFirstCallbackNode();
+  // 给任务优先级排序
   const curWork = workList.sort((w1, w2) => w1.priority - w2.priority)[0];
 
   if (!curWork) {
@@ -67,6 +72,7 @@ function schedule() {
   }
 
   const { priority: curPriority } = curWork;
+  // 当前运行的优先级一致
   if (curPriority === prevPriority) return;
 
   cbNode && cancelCallback(cbNode);
@@ -82,6 +88,7 @@ function perform(work: Work, didTimeout?: boolean) {
    */
   const needSync = work.priority === ImmediatePriority || didTimeout;
   while ((needSync || !shouldYield()) && work.count) {
+    // 任务进度
     work.count--;
     // 执行的任务
     insertSpan(work.priority + "");
@@ -90,6 +97,7 @@ function perform(work: Work, didTimeout?: boolean) {
   // 中断执行 ｜｜ 执行完
   prevPriority = work.priority;
 
+  // 执行完
   if (!work.count) {
     const workIndex = workList.indexOf(work);
     workList.splice(workIndex, 1);
