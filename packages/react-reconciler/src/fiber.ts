@@ -102,14 +102,18 @@ export const createWorkInProgress = (
   let wip = current.alternate;
 
   if (wip === null) {
+    // mount
     wip = new FiberNode(current.tag, pendingProps, current.key);
     wip.stateNode = current.stateNode;
 
     wip.alternate = current;
     current.alternate = wip;
   } else {
+    // update
     wip.pendingProps = pendingProps;
     wip.flags = NoFlags;
+    wip.subtreeFlags = NoFlags;
+    wip.deletions = null;
   }
   wip.type = current.type;
   wip.updateQueue = current.updateQueue;
@@ -125,11 +129,10 @@ export function createFiberFromElement(element: ReactElementType): FiberNode {
   let fiberTag: WorkTag = FunctionComponent;
 
   if (typeof type === "string") {
-    // <div /> div
+    // <div/> type: 'div'
     fiberTag = HostComponent;
-    // @ts-ignore
-  } else if (typeof type !== "function" && __Dev__) {
-    console.warn("未定义type类型", type);
+  } else if (typeof type !== "function" && __DEV__) {
+    console.warn("为定义的type类型", element);
   }
   const fiber = new FiberNode(fiberTag, props, key);
   fiber.type = type;
