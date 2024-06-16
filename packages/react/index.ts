@@ -1,3 +1,4 @@
+import currentBatchConfig from "./src/currentBatchConfig";
 import currentDispatcher, {
   Dispatcher,
   resolveDispatcher,
@@ -14,8 +15,14 @@ export const useEffect: Dispatcher["useEffect"] = (callback, deps) => {
   return dispatcher.useEffect(callback, deps);
 };
 
+export const useTransition: Dispatcher["useTransition"] = () => {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useTransition();
+};
+
 export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   currentDispatcher,
+  currentBatchConfig,
 };
 
 export const version = "0.0.0";
