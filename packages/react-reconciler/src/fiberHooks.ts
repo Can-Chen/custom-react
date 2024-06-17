@@ -2,7 +2,7 @@ import { Dispatch } from "react/src/currentDispatcher";
 import { Dispatcher } from "react/src/currentDispatcher";
 import currentBatchConfig from "react/src/currentBatchConfig";
 import internals from "shared/internals";
-import { Action } from "shared/ReactTypes";
+import { Action, ReactContext } from "shared/ReactTypes";
 import { FiberNode } from "./fiber";
 import { Flags, PassiveEffect } from "./fiberFlags";
 import { Lane, NoLane, requestUpdateLane } from "./fiberLanes";
@@ -83,6 +83,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useEffect: mountEffect,
   useTransition: mountTransition,
   useRef: mountRef,
+  useContext: readContext,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -90,7 +91,17 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useEffect: updateEffect,
   useTransition: updateTransition,
   useRef: updateRef,
+  useContext: readContext,
 };
+
+function readContext<T>(context: ReactContext<T>): T {
+  const consumer = currentlyRenderingFiber;
+  if (consumer === null) {
+    throw new Error("只能在函数组件中调用useContext");
+  }
+  const value = context._currentValue;
+  return value;
+}
 
 function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
   const hook = mountWorkInProgressHook();
