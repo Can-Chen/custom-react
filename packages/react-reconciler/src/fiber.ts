@@ -1,13 +1,12 @@
-import type { Props, Key, Ref, ReactElementType } from "shared/ReactTypes";
+import { Props, Key, Ref, ReactElementType } from "shared/ReactTypes";
 import {
+  Fragment,
   FunctionComponent,
   HostComponent,
-  type WorkTag,
-  Fragment,
+  WorkTag,
 } from "./workTags";
-import type { Flags } from "./fiberFlags";
-import type { Container } from "hostConfig"; // 要考虑多环境下的Container，native、dom等
-import { NoFlags } from "./fiberFlags";
+import { Flags, NoFlags } from "./fiberFlags";
+import { Container } from "hostConfig";
 import { Lane, Lanes, NoLane, NoLanes } from "./fiberLanes";
 import { Effect } from "./fiberHooks";
 import { CallbackNode } from "scheduler";
@@ -27,7 +26,6 @@ export class FiberNode {
 
   memoizedProps: Props | null;
   memoizedState: any;
-
   alternate: FiberNode | null;
   flags: Flags;
   subtreeFlags: Flags;
@@ -38,7 +36,7 @@ export class FiberNode {
     // 实例
     this.tag = tag;
     this.key = key || null;
-    // HostCompoent <div> div DOM
+    // HostComponent <div> div DOM
     this.stateNode = null;
     // FunctionComponent () => {}
     this.type = null;
@@ -49,7 +47,7 @@ export class FiberNode {
     this.child = null;
     this.index = 0;
 
-    this.ref = null;
+    this.ref = null as unknown as Ref;
 
     // 作为工作单元
     this.pendingProps = pendingProps;
@@ -77,8 +75,10 @@ export class FiberRootNode {
   pendingLanes: Lanes;
   finishedLane: Lane;
   pendingPassiveEffects: PendingPassiveEffects;
+
   callbackNode: CallbackNode | null;
   callbackPriority: Lane;
+
   constructor(container: Container, hostRootFiber: FiberNode) {
     this.container = container;
     this.current = hostRootFiber;
@@ -86,12 +86,14 @@ export class FiberRootNode {
     this.finishedWork = null;
     this.pendingLanes = NoLanes;
     this.finishedLane = NoLane;
+
+    this.callbackNode = null;
+    this.callbackPriority = NoLane;
+
     this.pendingPassiveEffects = {
       unmount: [],
       update: [],
     };
-    this.callbackNode = null;
-    this.callbackPriority = NoLane;
   }
 }
 
@@ -120,12 +122,13 @@ export const createWorkInProgress = (
   wip.child = current.child;
   wip.memoizedProps = current.memoizedProps;
   wip.memoizedState = current.memoizedState;
+  wip.ref = current.ref;
 
   return wip;
 };
 
 export function createFiberFromElement(element: ReactElementType): FiberNode {
-  const { type, key, props } = element;
+  const { type, key, props, ref } = element;
   let fiberTag: WorkTag = FunctionComponent;
 
   if (typeof type === "string") {
@@ -136,6 +139,7 @@ export function createFiberFromElement(element: ReactElementType): FiberNode {
   }
   const fiber = new FiberNode(fiberTag, props, key);
   fiber.type = type;
+  fiber.ref = ref;
   return fiber;
 }
 
