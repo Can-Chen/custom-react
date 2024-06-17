@@ -10,6 +10,7 @@
     "transition": "vite serve demo/transition --config scripts/vite/vite.config.js --force",
     "ref": "vite serve demo/ref --config scripts/vite/vite.config.js --force",
     "context": "vite serve demo/context --config scripts/vite/vite.config.js --force",
+    "suspense": "vite serve demo/suspense-use --config scripts/vite/vite.config.js --force",
     "test": "jest --config  scripts/jest/jest.config.js"
   },
   "keywords": [],
