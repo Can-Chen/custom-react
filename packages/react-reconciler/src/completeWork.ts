@@ -84,6 +84,7 @@ function bubbleProperties(wip: FiberNode) {
   let subtreeFlags = NoFlags;
   let child = wip.child;
 
+  // 遍历当前节点的子节点的兄弟节点 来标识当前workInprogress的子节点中的所有节点中是否有Placement | Delection
   while (child !== null) {
     subtreeFlags |= child.subtreeFlags;
     subtreeFlags |= child.flags;

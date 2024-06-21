@@ -13,7 +13,7 @@ function prepareFreshStack(root: FiberRootNode) {
 
 export function scheduleUpdateOnFiber(fiber: FiberNode) {
   // TODO 调度功能
-  // fiberRootNode
+  // 找到fiberRootNode
   const root = markUpdateFromFiberToRoot(fiber);
   renderRoot(root);
 }
@@ -33,6 +33,7 @@ function markUpdateFromFiberToRoot(fiber: FiberNode) {
 
 function renderRoot(root: FiberRootNode) {
   // 初始化
+  // 创建workInprogress
   prepareFreshStack(root);
   do {
     try {
@@ -87,9 +88,54 @@ function workLoop() {
 }
 
 function performUnitOfWork(fiber: FiberNode) {
+  // beginwork 向下遍历
+  /**
+   * <App>
+   *    <div>
+   *       <span>最深</span>
+   *       <span>兄弟</span>
+   *    </div>
+   *    <section>
+   *       <a>测试</a>
+   *       <a>
+   *          测试2
+   *          <a>测试3</a>
+   *       </a>
+   *    </section>
+   * </App>
+   */
+
+  /**
+   * begin: App  .child => div
+   * begin: div  .child => span
+   * begin: span .child => 最深
+   * begin: 最深  .child => null
+   * complete: 最深 .sibling => null => .return
+   * complete: span .sibling => span
+   * begin: span .child => 兄弟
+   * beign: 兄弟  .child => null
+   * complete: 兄弟 .sibling => null => .return
+   * complete: span .sibling => null => .return
+   * complete: div .sibling => section
+   * begin: section .child => a
+   * beign: a .child => 测试
+   * begin: 测试 .child => null
+   * complete: 测试 .sibling => null => .return
+   * complete: a .sibling => a
+   * begin: a .child => 测试2
+   * begin: 测试2 .child => null
+   * complete: 测试2 .sibling => a
+   * begin: a .child => 测试3
+   * begin: 测试3 .child => null
+   * complete: 测试3 .sibling => null => .return
+   * complete: a .sibling => null => .return
+   * complete: section .sibling => null => .return
+   * complete: App .sibling => null => .return
+   */
   const next = beginWork(fiber);
   fiber.memoizedProps = fiber.pendingProps;
 
+  // 向下遍历结束 开始向上遍历
   if (next === null) {
     completeUnitOfWork(fiber);
   } else {
@@ -100,6 +146,10 @@ function performUnitOfWork(fiber: FiberNode) {
 function completeUnitOfWork(fiber: FiberNode) {
   let node: FiberNode | null = fiber;
 
+  /**
+   * 先遍历当前节点
+   * 如果当前节点
+   */
   do {
     completeWork(node);
     const sibling = node.sibling;
